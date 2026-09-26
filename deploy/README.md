@@ -2,11 +2,20 @@
 
 Domain is configurable (default: `example.com`).
 
-```bash
-# optional — defaults to example.com
-export DOMAIN=example.com
+## One-click (recommended)
 
-sudo ./install-ubuntu.sh /path/to/pricesheet-*-linux-x86_64
+```bash
+tar -xzf pricesheet-*-linux-x86_64.tar.gz
+cd pricesheet-*-linux-x86_64
+nano one-click.sh          # change DOMAIN="example.com"
+sudo ./one-click.sh
+```
+
+## Manual
+
+```bash
+export DOMAIN=example.com
+sudo -E ./deploy/install-ubuntu.sh "$(pwd)"
 ```
 
 ## 1. DNS
@@ -27,23 +36,7 @@ sudo ufw allow OpenSSH
 sudo ufw enable
 ```
 
-## 2. Download release
-
-From GitHub Actions artifact or Releases:
-
-```bash
-tar -xzf pricesheet-*-linux-x86_64.tar.gz
-cd pricesheet-*-linux-x86_64
-```
-
-## 3. Install (app + Caddy)
-
-```bash
-export DOMAIN=example.com   # change to your domain
-sudo -E ./deploy/install-ubuntu.sh "$(pwd)"
-```
-
-This will:
+## 2. What the installer does
 
 - Install **Caddy** (automatic Let's Encrypt certificates)
 - Install the app under `/opt/pricesheet`
@@ -51,30 +44,32 @@ This will:
 - Write `/etc/caddy/Caddyfile` for `$DOMAIN` + `www.$DOMAIN`
 - Enable and start both services
 
-## 4. Verify
+## 3. Verify
 
 ```bash
 systemctl status pricesheet
 systemctl status caddy
-curl -I "https://$DOMAIN"
+curl -I "https://your.domain"
 ```
 
 Certificates are issued automatically by Caddy once DNS resolves to this host.
 
-## 5. Change domain later
+## 4. Change domain / upgrade
+
+Edit `DOMAIN` in `one-click.sh`, then run again:
 
 ```bash
-export DOMAIN=new.example.com
-sudo -E /opt/pricesheet/deploy/install-ubuntu.sh /opt/pricesheet
+sudo ./one-click.sh
 ```
 
 ## Files
 
 | File | Purpose |
 |------|---------|
+| `one-click.sh` | Edit domain + one-click install/update |
 | `Caddyfile` | Reverse proxy + auto HTTPS (`__DOMAIN__` placeholder) |
 | `pricesheet.service` | systemd unit for the Node app |
-| `install-ubuntu.sh` | One-shot installer (`DOMAIN` env) |
+| `install-ubuntu.sh` | Underlying installer (`DOMAIN` env) |
 
 ## Notes
 
