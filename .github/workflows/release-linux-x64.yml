@@ -11,6 +11,9 @@ on:
 permissions:
   contents: write
 
+env:
+  NODE_DIST_VERSION: "20.19.0"
+
 jobs:
   build:
     name: Build linux-x86_64 package
@@ -25,11 +28,107 @@ jobs:
           node-version: "20"
           cache: npm
 
-      - name: Build release package
-        env:
-          # Runner is already Linux x86_64 — build on host (no container)
-          BUILD_ON_HOST: "1"
-        run: npm run build:linux-x64
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3 make g++ xz-utils
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Next.js (standalone)
+        run: npm run build
+
+      - name: Assemble linux-x86_64 release package
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          SQLITE_VERSION="$(node -p "require('./package.json').dependencies['better-sqlite3'].replace(/^[^\d]*/, '')")"
+          PKG_NAME="pricesheet-${VERSION}-linux-x86_64"
+          PKG_DIR="dist/${PKG_NAME}"
+          TAR_PATH="dist/${PKG_NAME}.tar.gz"
+
+          rm -rf dist
+          mkdir -p "$PKG_DIR"
+          test -f .next/standalone/server.js
+
+          cp -a .next/standalone/. "$PKG_DIR/"
+          mkdir -p "$PKG_DIR/.next"
+          cp -a .next/static "$PKG_DIR/.next/static"
+          [[ -d public ]] && cp -a public "$PKG_DIR/public"
+
+          mkdir -p "$PKG_DIR/data"
+          touch "$PKG_DIR/data/.gitkeep"
+          [[ -f .env.example ]] && cp .env.example "$PKG_DIR/.env.example"
+
+          (cd "$PKG_DIR" && npm install "better-sqlite3@${SQLITE_VERSION}" --omit=dev --no-audit --no-fund)
+
+          NODE_TGZ="node-v${NODE_DIST_VERSION}-linux-x64.tar.xz"
+          curl -fsSL "https://nodejs.org/dist/v${NODE_DIST_VERSION}/${NODE_TGZ}" -o "/tmp/${NODE_TGZ}"
+          mkdir -p "$PKG_DIR/runtime"
+          tar -xJf "/tmp/${NODE_TGZ}" -C "$PKG_DIR/runtime"
+          mv "$PKG_DIR/runtime/node-v${NODE_DIST_VERSION}-linux-x64" "$PKG_DIR/runtime/node"
+          rm -f "/tmp/${NODE_TGZ}"
+          rm -rf \
+            "$PKG_DIR/runtime/node/include" \
+            "$PKG_DIR/runtime/node/share" \
+            "$PKG_DIR/runtime/node/lib/node_modules/npm" \
+            "$PKG_DIR/runtime/node/lib/node_modules/corepack" \
+            "$PKG_DIR/runtime/node/CHANGELOG.md" \
+            "$PKG_DIR/runtime/node/README.md" \
+            "$PKG_DIR/runtime/node/LICENSE" || true
+
+          cat > "$PKG_DIR/.env" <<'EOF'
+          SESSION_SECRET=change-me-to-a-long-random-secret-at-least-32-chars
+          NEXT_PUBLIC_SITE_NAME=PriceSheet
+          NEXT_PUBLIC_SITE_TAGLINE=Online Price Spreadsheet
+          PORT=3000
+          HOSTNAME=0.0.0.0
+          EOF
+
+          cat > "$PKG_DIR/start.sh" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          cd "$(dirname "$0")"
+          if [[ -f .env ]]; then
+            set -a
+            # shellcheck disable=SC1091
+            source .env
+            set +a
+          fi
+          export PORT="${PORT:-3000}"
+          export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+          export NODE_ENV=production
+          NODE_BIN="./runtime/node/bin/node"
+          if [[ ! -x "$NODE_BIN" ]]; then
+            echo "ERROR: bundled Node binary missing: $NODE_BIN" >&2
+            exit 1
+          fi
+          echo "Starting PriceSheet (linux-x86_64) on http://${HOSTNAME}:${PORT}"
+          exec "$NODE_BIN" server.js
+          EOF
+
+          cat > "$PKG_DIR/README.txt" <<'EOF'
+          PriceSheet binary release (linux-x86_64)
+          1. nano .env
+          2. ./start.sh
+          Default admin: admin / admin123
+          Data: ./data/app.db
+          EOF
+
+          cat > "$PKG_DIR/BUILD_INFO.txt" <<EOF
+          name=${PKG_NAME}
+          platform=linux/amd64
+          node=${NODE_DIST_VERSION}
+          better-sqlite3=${SQLITE_VERSION}
+          built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          arch=$(uname -m)
+          builder=github-actions
+          EOF
+
+          chmod +x "$PKG_DIR/start.sh" "$PKG_DIR/runtime/node/bin/node"
+          tar -C dist -czf "$TAR_PATH" "$PKG_NAME"
+          ls -lh "$TAR_PATH"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

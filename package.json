@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "build:ubuntu": "bash scripts/build-ubuntu.sh",
-    "build:linux-x64": "bash scripts/build-ubuntu.sh"
+    "lint": "eslint"
   },
   "dependencies": {
     "@fortune-sheet/react": "^1.0.4",
