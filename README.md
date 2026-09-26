@@ -65,16 +65,18 @@ Workflow: [`.github/workflows/release-linux-x64.yml`](.github/workflows/release-
 
 Download: **Actions** → Artifacts → `pricesheet-linux-x86_64`, or **Releases** after tagging.
 
-## Production domain: 168899.club
+## Production domain (configurable)
 
-Automatic HTTPS via **Caddy** (Let's Encrypt). See [deploy/README.md](deploy/README.md).
+Automatic HTTPS via **Caddy** (Let's Encrypt). Default domain: `example.com`.  
+See [deploy/README.md](deploy/README.md).
 
 ```bash
-# DNS: A records for 168899.club and www → server IP; open ports 80/443
+# DNS: A records for your domain + www → server IP; open ports 80/443
 tar -xzf pricesheet-*-linux-x86_64.tar.gz
 cd pricesheet-*-linux-x86_64
-sudo ./deploy/install-ubuntu.sh "$(pwd)"
-# → https://168899.club
+export DOMAIN=example.com   # change to your domain
+sudo -E ./deploy/install-ubuntu.sh "$(pwd)"
+# → https://$DOMAIN
 ```
 
 ## Routes

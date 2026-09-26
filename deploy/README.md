@@ -1,4 +1,13 @@
-# Deploy 168899.club (Ubuntu + Caddy auto HTTPS)
+# Deploy on Ubuntu with Caddy automatic HTTPS
+
+Domain is configurable (default: `example.com`).
+
+```bash
+# optional — defaults to example.com
+export DOMAIN=example.com
+
+sudo ./install-ubuntu.sh /path/to/pricesheet-*-linux-x86_64
+```
 
 ## 1. DNS
 
@@ -6,7 +15,7 @@ Point these records to your server's public IP:
 
 | Type | Name | Value |
 |------|------|--------|
-| A | `@` (168899.club) | server IP |
+| A | `@` (`your.domain`) | server IP |
 | A | `www` | server IP |
 
 Open firewall ports **80** and **443** (required for Let's Encrypt).
@@ -27,12 +36,11 @@ tar -xzf pricesheet-*-linux-x86_64.tar.gz
 cd pricesheet-*-linux-x86_64
 ```
 
-The release package includes a `deploy/` folder.
-
 ## 3. Install (app + Caddy)
 
 ```bash
-sudo ./deploy/install-ubuntu.sh "$(pwd)"
+export DOMAIN=example.com   # change to your domain
+sudo -E ./deploy/install-ubuntu.sh "$(pwd)"
 ```
 
 This will:
@@ -40,7 +48,7 @@ This will:
 - Install **Caddy** (automatic Let's Encrypt certificates)
 - Install the app under `/opt/pricesheet`
 - Create systemd service `pricesheet` (listens on `127.0.0.1:3000`)
-- Configure `/etc/caddy/Caddyfile` for `168899.club` + `www`
+- Write `/etc/caddy/Caddyfile` for `$DOMAIN` + `www.$DOMAIN`
 - Enable and start both services
 
 ## 4. Verify
@@ -48,31 +56,25 @@ This will:
 ```bash
 systemctl status pricesheet
 systemctl status caddy
-curl -I https://168899.club
+curl -I "https://$DOMAIN"
 ```
 
 Certificates are issued automatically by Caddy once DNS resolves to this host.
 
-## 5. Update
+## 5. Change domain later
 
 ```bash
-# unpack new release, then:
-sudo ./deploy/install-ubuntu.sh /path/to/new-pricesheet-*-linux-x86_64
-# existing /opt/pricesheet/.env and data/ are preserved when re-rsync carefully;
-# for updates prefer:
-sudo systemctl stop pricesheet
-sudo rsync -a --exclude '.env' --exclude 'data' ./new-release/ /opt/pricesheet/
-sudo systemctl start pricesheet
-sudo systemctl reload caddy
+export DOMAIN=new.example.com
+sudo -E /opt/pricesheet/deploy/install-ubuntu.sh /opt/pricesheet
 ```
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `Caddyfile` | Reverse proxy + auto HTTPS |
+| `Caddyfile` | Reverse proxy + auto HTTPS (`__DOMAIN__` placeholder) |
 | `pricesheet.service` | systemd unit for the Node app |
-| `install-ubuntu.sh` | One-shot installer |
+| `install-ubuntu.sh` | One-shot installer (`DOMAIN` env) |
 
 ## Notes
 

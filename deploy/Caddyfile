@@ -1,18 +1,18 @@
-# Caddy automatic HTTPS for 168899.club (Let's Encrypt)
+# Caddy automatic HTTPS (Let's Encrypt)
+# Placeholder __DOMAIN__ is replaced by install-ubuntu.sh (default: example.com)
 # Docs: https://caddyserver.com/docs/automatic-https
 
 {
-	email admin@168899.club
+	email admin@__DOMAIN__
 }
 
-168899.club, www.168899.club {
+__DOMAIN__, www.__DOMAIN__ {
 	encode gzip zstd
 
 	# App listens on 127.0.0.1:3000 (see pricesheet.service)
 	reverse_proxy 127.0.0.1:3000
 
 	header {
-		# Basic hardening
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
@@ -20,7 +20,7 @@
 	}
 
 	log {
-		output file /var/log/caddy/168899.club.log
+		output file /var/log/caddy/__DOMAIN__.log
 		format console
 	}
 }

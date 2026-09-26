@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# Install PriceSheet + Caddy on Ubuntu with automatic HTTPS for 168899.club
+# Install PriceSheet + Caddy on Ubuntu with automatic HTTPS
 # Usage (as root):
-#   ./install-ubuntu.sh /path/to/pricesheet-*-linux-x86_64
+#   DOMAIN=example.com ./install-ubuntu.sh /path/to/pricesheet-*-linux-x86_64
 set -euo pipefail
 
-DOMAIN="${DOMAIN:-168899.club}"
+DOMAIN="${DOMAIN:-example.com}"
 APP_USER="${APP_USER:-pricesheet}"
 APP_DIR="${APP_DIR:-/opt/pricesheet}"
 SRC_DIR="${1:-}"
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "Run as root: sudo $0 /path/to/extracted-release" >&2
+  echo "Run as root: sudo DOMAIN=example.com $0 /path/to/extracted-release" >&2
   exit 1
 fi
 
 if [[ -z "$SRC_DIR" || ! -f "$SRC_DIR/start.sh" ]]; then
-  echo "Usage: $0 /path/to/pricesheet-VERSION-linux-x86_64" >&2
+  echo "Usage: DOMAIN=your.domain $0 /path/to/pricesheet-VERSION-linux-x86_64" >&2
   exit 1
 fi
 
@@ -97,14 +97,15 @@ install -m 644 "$SCRIPT_DIR/pricesheet.service" /etc/systemd/system/pricesheet.s
 
 # --- Caddy site config ---
 install -m 644 "$SCRIPT_DIR/Caddyfile" /etc/caddy/Caddyfile
-# Allow overriding domain via env at install time
-if [[ "$DOMAIN" != "168899.club" ]]; then
-  sed -i "s/168899\\.club/${DOMAIN//./\\.}/g" /etc/caddy/Caddyfile
-  sed -i "s/admin@.*/admin@${DOMAIN}/" /etc/caddy/Caddyfile
-fi
+# Replace __DOMAIN__ placeholder with configured domain
+sed -i "s/__DOMAIN__/${DOMAIN}/g" /etc/caddy/Caddyfile
 
 mkdir -p /var/log/caddy
 chown caddy:caddy /var/log/caddy 2>/dev/null || true
+
+# Persist domain for later upgrades
+printf '%s\n' "$DOMAIN" > "$APP_DIR/deploy/domain.txt"
+chown "$APP_USER:$APP_USER" "$APP_DIR/deploy/domain.txt" 2>/dev/null || true
 
 systemctl daemon-reload
 systemctl enable --now pricesheet.service
@@ -113,6 +114,7 @@ systemctl reload caddy || systemctl restart caddy
 
 echo
 echo "Installed."
+echo "  Domain: ${DOMAIN}"
 echo "  App:    systemctl status pricesheet"
 echo "  Proxy:  systemctl status caddy"
 echo "  Site:   https://${DOMAIN}"

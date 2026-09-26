@@ -111,10 +111,11 @@ jobs:
 
           cat > "$PKG_DIR/README.txt" <<'EOF'
           PriceSheet binary release (linux-x86_64)
-          Domain: 168899.club (Caddy auto HTTPS)
+          Caddy auto HTTPS — domain via DOMAIN env (default: example.com)
 
           Quick deploy on Ubuntu:
-            sudo ./deploy/install-ubuntu.sh "$(pwd)"
+            export DOMAIN=example.com
+            sudo -E ./deploy/install-ubuntu.sh "$(pwd)"
 
           Or manual:
             1. nano .env
