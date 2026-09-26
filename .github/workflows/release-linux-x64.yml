@@ -60,7 +60,12 @@ jobs:
           mkdir -p "$PKG_DIR/data"
           touch "$PKG_DIR/data/.gitkeep"
           [[ -f .env.example ]] && cp .env.example "$PKG_DIR/.env.example"
-          [[ -d deploy ]] && cp -a deploy "$PKG_DIR/deploy" && chmod +x "$PKG_DIR/deploy/install-ubuntu.sh"
+          [[ -d deploy ]] && cp -a deploy "$PKG_DIR/deploy" && chmod +x "$PKG_DIR/deploy/"*.sh
+          # One-click script at package root (edit DOMAIN then sudo ./one-click.sh)
+          if [[ -f deploy/one-click.sh ]]; then
+            cp deploy/one-click.sh "$PKG_DIR/one-click.sh"
+            chmod +x "$PKG_DIR/one-click.sh"
+          fi
 
           (cd "$PKG_DIR" && npm install "better-sqlite3@${SQLITE_VERSION}" --omit=dev --no-audit --no-fund)
 
@@ -111,15 +116,10 @@ jobs:
 
           cat > "$PKG_DIR/README.txt" <<'EOF'
           PriceSheet binary release (linux-x86_64)
-          Caddy auto HTTPS — domain via DOMAIN env (default: example.com)
 
-          Quick deploy on Ubuntu:
-            export DOMAIN=example.com
-            sudo -E ./deploy/install-ubuntu.sh "$(pwd)"
-
-          Or manual:
-            1. nano .env
-            2. ./start.sh
+          One-click deploy (Ubuntu):
+            1. Edit DOMAIN in ./one-click.sh
+            2. sudo ./one-click.sh
 
           Default admin: admin / admin123
           Data: ./data/app.db

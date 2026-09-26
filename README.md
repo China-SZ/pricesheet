@@ -71,13 +71,15 @@ Automatic HTTPS via **Caddy** (Let's Encrypt). Default domain: `example.com`.
 See [deploy/README.md](deploy/README.md).
 
 ```bash
-# DNS: A records for your domain + www → server IP; open ports 80/443
 tar -xzf pricesheet-*-linux-x86_64.tar.gz
 cd pricesheet-*-linux-x86_64
-export DOMAIN=example.com   # change to your domain
-sudo -E ./deploy/install-ubuntu.sh "$(pwd)"
-# → https://$DOMAIN
+# 1. Edit DOMAIN=... inside one-click.sh
+# 2. Install
+sudo ./one-click.sh
+# → https://your-domain
 ```
+
+DNS: A records for your domain + `www` → server IP; open ports 80/443.
 
 ## Routes
 
