@@ -53,7 +53,7 @@ npm run start    # run production server
 
 ## Linux x86_64 binary release (GitHub Actions)
 
-Release packages are built only by GitHub Actions — no local packaging script.
+Release packages are built only by GitHub Actions.
 
 Workflow: [`.github/workflows/release-linux-x64.yml`](.github/workflows/release-linux-x64.yml)
 
@@ -63,25 +63,18 @@ Workflow: [`.github/workflows/release-linux-x64.yml`](.github/workflows/release-
 | Tag `v*` (e.g. `v0.1.0`) | Build + GitHub Release with `.tar.gz` |
 | Manual **Run workflow** | Same as push |
 
-Package contents:
-- Next.js standalone server
-- Bundled Node.js linux-x64 under `runtime/node`
-- `better-sqlite3` built for Linux x86_64
+Download: **Actions** → Artifacts → `pricesheet-linux-x86_64`, or **Releases** after tagging.
 
-Download: **Actions** → run → Artifacts → `pricesheet-linux-x86_64`  
-Or after tagging: **Releases**
+## Production domain: 168899.club
+
+Automatic HTTPS via **Caddy** (Let's Encrypt). See [deploy/README.md](deploy/README.md).
 
 ```bash
-git tag v0.1.0 && git push origin v0.1.0
-```
-
-On the Ubuntu x86_64 server:
-
-```bash
+# DNS: A records for 168899.club and www → server IP; open ports 80/443
 tar -xzf pricesheet-*-linux-x86_64.tar.gz
 cd pricesheet-*-linux-x86_64
-nano .env          # set SESSION_SECRET
-./start.sh         # no system Node.js required
+sudo ./deploy/install-ubuntu.sh "$(pwd)"
+# → https://168899.club
 ```
 
 ## Routes

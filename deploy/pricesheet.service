@@ -1,0 +1,25 @@
+[Unit]
+Description=PriceSheet (Next.js standalone)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pricesheet
+Group=pricesheet
+WorkingDirectory=/opt/pricesheet
+EnvironmentFile=-/opt/pricesheet/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/opt/pricesheet/start.sh
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65535
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

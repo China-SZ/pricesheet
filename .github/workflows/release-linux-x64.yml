@@ -60,6 +60,7 @@ jobs:
           mkdir -p "$PKG_DIR/data"
           touch "$PKG_DIR/data/.gitkeep"
           [[ -f .env.example ]] && cp .env.example "$PKG_DIR/.env.example"
+          [[ -d deploy ]] && cp -a deploy "$PKG_DIR/deploy" && chmod +x "$PKG_DIR/deploy/install-ubuntu.sh"
 
           (cd "$PKG_DIR" && npm install "better-sqlite3@${SQLITE_VERSION}" --omit=dev --no-audit --no-fund)
 
@@ -110,10 +111,18 @@ jobs:
 
           cat > "$PKG_DIR/README.txt" <<'EOF'
           PriceSheet binary release (linux-x86_64)
-          1. nano .env
-          2. ./start.sh
+          Domain: 168899.club (Caddy auto HTTPS)
+
+          Quick deploy on Ubuntu:
+            sudo ./deploy/install-ubuntu.sh "$(pwd)"
+
+          Or manual:
+            1. nano .env
+            2. ./start.sh
+
           Default admin: admin / admin123
           Data: ./data/app.db
+          See deploy/README.md
           EOF
 
           cat > "$PKG_DIR/BUILD_INFO.txt" <<EOF

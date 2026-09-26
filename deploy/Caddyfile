@@ -1,0 +1,26 @@
+# Caddy automatic HTTPS for 168899.club (Let's Encrypt)
+# Docs: https://caddyserver.com/docs/automatic-https
+
+{
+	email admin@168899.club
+}
+
+168899.club, www.168899.club {
+	encode gzip zstd
+
+	# App listens on 127.0.0.1:3000 (see pricesheet.service)
+	reverse_proxy 127.0.0.1:3000
+
+	header {
+		# Basic hardening
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/168899.club.log
+		format console
+	}
+}
