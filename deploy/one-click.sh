@@ -3,6 +3,7 @@
 # ------------------------------------------------
 # 1. Edit DOMAIN below
 # 2. sudo ./one-click.sh
+#    (auto stop → update files → restart; keeps .env and data/)
 # ------------------------------------------------
 set -euo pipefail
 

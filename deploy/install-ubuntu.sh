@@ -48,6 +48,12 @@ fi
 
 mkdir -p "$APP_DIR" /var/log/caddy
 
+# Stop app before replacing files (safe upgrade)
+if systemctl is-active --quiet pricesheet.service 2>/dev/null; then
+  echo "==> Stopping pricesheet for upgrade"
+  systemctl stop pricesheet.service
+fi
+
 # Preserve runtime state across reinstalls/upgrades
 rsync -a \
   --exclude '.env' \
@@ -108,16 +114,18 @@ printf '%s\n' "$DOMAIN" > "$APP_DIR/deploy/domain.txt"
 chown "$APP_USER:$APP_USER" "$APP_DIR/deploy/domain.txt" 2>/dev/null || true
 
 systemctl daemon-reload
-systemctl enable --now pricesheet.service
-systemctl enable --now caddy.service
-systemctl reload caddy || systemctl restart caddy
+systemctl enable pricesheet.service
+systemctl restart pricesheet.service
+systemctl enable caddy.service
+systemctl reload caddy 2>/dev/null || systemctl restart caddy
 
 echo
-echo "Installed."
+echo "Installed / updated."
 echo "  Domain: ${DOMAIN}"
 echo "  App:    systemctl status pricesheet"
 echo "  Proxy:  systemctl status caddy"
 echo "  Site:   https://${DOMAIN}"
+echo "  IP:     http://<server-ip>/"
 echo
 echo "DNS checklist (before certs work):"
 echo "  A     ${DOMAIN}     -> this server public IP"
@@ -125,5 +133,4 @@ echo "  A     www.${DOMAIN} -> this server public IP"
 echo "  Ports 80 and 443 open in firewall"
 echo
 echo "Caddy will obtain Let's Encrypt certificates automatically after DNS propagates."
-echo "IP HTTP (no TLS): http://<server-ip>/"
 echo "Edit secrets: nano ${APP_DIR}/.env && systemctl restart pricesheet"
