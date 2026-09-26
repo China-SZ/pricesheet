@@ -72,7 +72,7 @@ if [[ ! -f "$APP_DIR/.env" ]]; then
   cat > "$APP_DIR/.env" <<EOF
 SESSION_SECRET=$(openssl rand -hex 32)
 NEXT_PUBLIC_SITE_NAME=PriceSheet
-NEXT_PUBLIC_SITE_TAGLINE=Online Price Spreadsheet
+NEXT_PUBLIC_SITE_TAGLINE="Online Price Spreadsheet"
 PORT=3000
 HOSTNAME=127.0.0.1
 EOF
@@ -90,6 +90,10 @@ else
   fi
   if grep -q 'change-me-to-a-long-random-secret' "$APP_DIR/.env"; then
     sed -i "s/^SESSION_SECRET=.*/SESSION_SECRET=$(openssl rand -hex 32)/" "$APP_DIR/.env"
+  fi
+  # Quote tagline if it contains spaces without quotes (breaks start.sh / bash source)
+  if grep -qE '^NEXT_PUBLIC_SITE_TAGLINE=[^"'\''].*[[:space:]]' "$APP_DIR/.env"; then
+    sed -i 's/^NEXT_PUBLIC_SITE_TAGLINE=\(.*\)$/NEXT_PUBLIC_SITE_TAGLINE="\1"/' "$APP_DIR/.env"
   fi
 fi
 

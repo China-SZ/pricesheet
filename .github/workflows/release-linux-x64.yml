@@ -87,7 +87,7 @@ jobs:
           cat > "$PKG_DIR/.env" <<'EOF'
           SESSION_SECRET=change-me-to-a-long-random-secret-at-least-32-chars
           NEXT_PUBLIC_SITE_NAME=PriceSheet
-          NEXT_PUBLIC_SITE_TAGLINE=Online Price Spreadsheet
+          NEXT_PUBLIC_SITE_TAGLINE="Online Price Spreadsheet"
           PORT=3000
           HOSTNAME=0.0.0.0
           EOF
@@ -96,11 +96,28 @@ jobs:
           #!/usr/bin/env bash
           set -euo pipefail
           cd "$(dirname "$0")"
+
+          # Load .env safely (supports spaces; do not `source` — unquoted values break bash)
+          load_dotenv() {
+            local file="$1" line key val
+            while IFS= read -r line || [[ -n "$line" ]]; do
+              line="${line#"${line%%[![:space:]]*}"}"
+              line="${line%"${line##*[![:space:]]}"}"
+              [[ -z "$line" || "$line" == \#* ]] && continue
+              [[ "$line" == *=* ]] || continue
+              key="${line%%=*}"
+              val="${line#*=}"
+              if [[ "$val" =~ ^\"(.*)\"$ ]]; then
+                val="${BASH_REMATCH[1]}"
+              elif [[ "$val" =~ ^\'(.*)\'$ ]]; then
+                val="${BASH_REMATCH[1]}"
+              fi
+              export "$key=$val"
+            done < "$file"
+          }
+
           if [[ -f .env ]]; then
-            set -a
-            # shellcheck disable=SC1091
-            source .env
-            set +a
+            load_dotenv .env
           fi
           export PORT="${PORT:-3000}"
           export HOSTNAME="${HOSTNAME:-0.0.0.0}"
