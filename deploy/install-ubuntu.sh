@@ -125,4 +125,5 @@ echo "  A     www.${DOMAIN} -> this server public IP"
 echo "  Ports 80 and 443 open in firewall"
 echo
 echo "Caddy will obtain Let's Encrypt certificates automatically after DNS propagates."
+echo "IP HTTP (no TLS): http://<server-ip>/"
 echo "Edit secrets: nano ${APP_DIR}/.env && systemctl restart pricesheet"

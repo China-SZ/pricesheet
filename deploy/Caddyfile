@@ -1,4 +1,4 @@
-# Caddy automatic HTTPS (Let's Encrypt)
+# Caddy automatic HTTPS (Let's Encrypt) + HTTP IP access
 # Placeholder __DOMAIN__ is replaced by install-ubuntu.sh (default: example.com)
 # Docs: https://caddyserver.com/docs/automatic-https
 
@@ -6,10 +6,9 @@
 	email admin@__DOMAIN__
 }
 
+# Domain → automatic HTTPS
 __DOMAIN__, www.__DOMAIN__ {
 	encode gzip zstd
-
-	# App listens on 127.0.0.1:3000 (see pricesheet.service)
 	reverse_proxy 127.0.0.1:3000
 
 	header {
@@ -22,5 +21,17 @@ __DOMAIN__, www.__DOMAIN__ {
 	log {
 		output file /var/log/caddy/__DOMAIN__.log
 		format console
+	}
+}
+
+# Plain HTTP for IP / other Host headers (no TLS)
+# Example: http://203.0.113.10/
+:80 {
+	@ipOrOther {
+		not host __DOMAIN__ www.__DOMAIN__
+	}
+	handle @ipOrOther {
+		encode gzip zstd
+		reverse_proxy 127.0.0.1:3000
 	}
 }

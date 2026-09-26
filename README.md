@@ -81,6 +81,9 @@ sudo ./one-click.sh
 
 DNS: A records for your domain + `www` → server IP; open ports 80/443.
 
+- Domain HTTPS: `https://your.domain`
+- IP HTTP: `http://SERVER_IP/` (plaintext, no certificate)
+
 ## Routes
 
 | Path | Access |

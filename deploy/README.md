@@ -73,6 +73,8 @@ sudo ./one-click.sh
 
 ## Notes
 
-- App binds to localhost only; public traffic goes through Caddy on 443.
-- `SESSION_SECRET` is auto-generated on first install if still the placeholder.
-- Default admin remains `admin` / `admin123` — change it after first login.
+- Domain: `https://your.domain` (auto certificate)
+- IP plaintext: `http://SERVER_IP/` (no TLS; for debug / before DNS)
+- App binds to localhost only; public traffic goes through Caddy
+- `SESSION_SECRET` is auto-generated on first install if still the placeholder
+- Default admin remains `admin` / `admin123` — change it after first login

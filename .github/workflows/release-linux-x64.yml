@@ -121,6 +121,10 @@ jobs:
             1. Edit DOMAIN in ./one-click.sh
             2. sudo ./one-click.sh
 
+          Access:
+            https://your-domain
+            http://SERVER_IP/   (plaintext IP)
+
           Default admin: admin / admin123
           Data: ./data/app.db
           See deploy/README.md
